@@ -13,7 +13,7 @@ A conversational AI chatbot built with Flutter and powered by the Google Gemini 
 
 ## Screenshots
 
-> Add screenshots here after running the app
+![Chat Screen](assets/screenshots/screenshot.png)
 
 ## Getting Started
 
