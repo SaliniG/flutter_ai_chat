@@ -530,11 +530,16 @@ class _ChatScreenState extends State<ChatScreen> {
               controller: _controller,
               minLines: 1,
               maxLines: 4,
+              maxLength: 1000,
               textInputAction: TextInputAction.newline,
               keyboardType: TextInputType.multiline,
               style: TextStyle(fontSize: 15, color: colorScheme.onSurface),
               decoration: InputDecoration(
                 hintText: 'Message Gemini...',
+                counterStyle: TextStyle(
+                  fontSize: 11,
+                  color: colorScheme.onSurfaceVariant,
+                ),
                 hintStyle: TextStyle(color: colorScheme.onSurfaceVariant),
                 filled: true,
                 fillColor: colorScheme.surfaceContainerHighest,
