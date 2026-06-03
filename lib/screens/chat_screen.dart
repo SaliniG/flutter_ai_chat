@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import '../models/chat_message.dart';
+import '../models/chat_session.dart';
 import '../services/gemini_service.dart';
+import '../services/chat_history_service.dart';
 import '../config.dart';
 import '../widgets/typing_dots.dart';
 import '../widgets/send_button.dart';
+import 'history_screen.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -20,6 +23,7 @@ class _ChatScreenState extends State<ChatScreen> {
   String _apiKey = Config.geminiApiKey;
 
   final List<Map<String, dynamic>> _conversationHistory = [];
+  final _historyService = ChatHistoryService();
 
   static const _placeholder = 'YOUR_GEMINI_API_KEY_HERE';
 
@@ -227,6 +231,39 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  Future<void> _saveAndClear() async {
+    if (_messages.isNotEmpty) {
+      final session = ChatSession.create(List.of(_messages));
+      await _historyService.saveSession(session);
+    }
+    setState(() {
+      _messages.clear();
+      _conversationHistory.clear();
+    });
+  }
+
+  Future<void> _openHistory() async {
+    final session = await Navigator.of(context).push<ChatSession>(
+      MaterialPageRoute(builder: (_) => const HistoryScreen()),
+    );
+    if (session != null) {
+      setState(() {
+        _messages
+          ..clear()
+          ..addAll(session.messages);
+        _conversationHistory
+          ..clear()
+          ..addAll(session.messages.map((m) => {
+                'role': m.role == MessageRole.user ? 'user' : 'model',
+                'parts': [
+                  {'text': m.text}
+                ],
+              }));
+      });
+      _scrollToBottom();
+    }
+  }
+
   void _showErrorSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -289,19 +326,19 @@ class _ChatScreenState extends State<ChatScreen> {
         ),
         actions: [
           IconButton(
+            icon: Icon(Icons.history_rounded, color: colorScheme.onPrimary),
+            tooltip: 'Chat history',
+            onPressed: _openHistory,
+          ),
+          IconButton(
             icon: Icon(Icons.key_rounded, color: colorScheme.onPrimary),
             tooltip: 'Update API key',
             onPressed: () => _showApiKeyDialog(),
           ),
           IconButton(
             icon: Icon(Icons.delete_outline, color: colorScheme.onPrimary),
-            tooltip: 'Clear conversation',
-            onPressed: _messages.isEmpty
-                ? null
-                : () => setState(() {
-                      _messages.clear();
-                      _conversationHistory.clear();
-                    }),
+            tooltip: 'Save & clear conversation',
+            onPressed: _messages.isEmpty ? null : _saveAndClear,
           ),
         ],
       ),
